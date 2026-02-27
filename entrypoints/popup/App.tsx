@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react'
 import { signInWithGoogle, signOut } from '../../lib/auth'
 import { restoreSession } from '../../lib/session'
-import { getNotes, addNote, deleteNote } from '../../lib/notes'
+import { getNotes, addNote, deleteNote, updateNote } from '../../lib/notes'
 import { supabase } from '../../lib/supabaseClient'
 
 export default function App() {
   const [user, setUser] = useState<any>(null)
   const [notes, setNotes] = useState<any[]>([])
   const [text, setText] = useState('')
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editText, setEditText] = useState('')
 
   useEffect(() => {
     init()
@@ -36,6 +38,20 @@ export default function App() {
   async function handleDelete(id: string) {
     await deleteNote(id)
     loadNotes()
+  }
+
+  function startEdit(note: any) {
+    setEditingId(note.id)
+    setEditText(note.content)
+  }
+
+  async function handleUpdate() {
+    if (editingId) {
+      await updateNote(editingId, editText)
+      setEditingId(null)
+      setEditText('')
+      loadNotes()
+    }
   }
 
   if (!user) {
@@ -85,6 +101,7 @@ export default function App() {
       <div style={{ marginBottom: '15px', fontSize: '14px', color: '#666' }}>
         {user.email}
       </div>
+      
       <button
         onClick={signOut}
         style={{
@@ -145,21 +162,84 @@ export default function App() {
             boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
           }}
         >
-          <span style={{ fontSize: '14px' }}>{note.content}</span>
-          <button
-            onClick={() => handleDelete(note.id)}
-            style={{
-              padding: '4px 8px',
-              background: '#ff4444',
-              color: 'white',
-              border: 'none',
-              borderRadius: '3px',
-              cursor: 'pointer',
-              fontSize: '12px'
-            }}
-          >
-            ×
-          </button>
+          {editingId === note.id ? (
+            <>
+              <input
+                value={editText}
+                onChange={(e) => setEditText(e.target.value)}
+                style={{
+                  flex: 1,
+                  padding: '6px',
+                  border: '1px solid #ddd',
+                  borderRadius: '3px',
+                  fontSize: '14px',
+                  marginRight: '8px'
+                }}
+              />
+              <button
+                onClick={handleUpdate}
+                style={{
+                  padding: '4px 8px',
+                  background: '#667eea',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '3px',
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                  marginRight: '4px'
+                }}
+              >
+                ✓
+              </button>
+              <button
+                onClick={() => setEditingId(null)}
+                style={{
+                  padding: '4px 8px',
+                  background: '#999',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '3px',
+                  cursor: 'pointer',
+                  fontSize: '12px'
+                }}
+              >
+                ✕
+              </button>
+            </>
+          ) : (
+            <>
+              <span style={{ fontSize: '14px', flex: 1 }}>{note.content}</span>
+              <button
+                onClick={() => startEdit(note)}
+                style={{
+                  padding: '4px 8px',
+                  background: '#667eea',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '3px',
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                  marginRight: '4px'
+                }}
+              >
+                ✎
+              </button>
+              <button
+                onClick={() => handleDelete(note.id)}
+                style={{
+                  padding: '4px 8px',
+                  background: '#ff4444',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '3px',
+                  cursor: 'pointer',
+                  fontSize: '12px'
+                }}
+              >
+                ×
+              </button>
+            </>
+          )}
         </div>
       ))}
     </div>

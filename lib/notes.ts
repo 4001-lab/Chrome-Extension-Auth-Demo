@@ -18,3 +18,8 @@ export async function deleteNote(id: string) {
   const { error } = await supabase.from('notes').delete().eq('id', id)
   if (error) throw error
 }
+
+export async function updateNote(id: string, content: string) {
+  const { error } = await supabase.from('notes').update({ content }).eq('id', id)
+  if (error) throw error
+}
