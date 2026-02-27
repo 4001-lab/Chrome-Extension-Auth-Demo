@@ -10,6 +10,7 @@ export default function App() {
   const [text, setText] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editText, setEditText] = useState('')
+  const [signingIn, setSigningIn] = useState(false)
 
   useEffect(() => {
     init()
@@ -80,7 +81,12 @@ export default function App() {
       }}>
         <h2 style={{ color: 'white', marginBottom: '30px' }}>Welcome</h2>
         <button
-          onClick={signInWithGoogle}
+          onClick={async () => {
+            setSigningIn(true)
+            await signInWithGoogle()
+            setSigningIn(false)
+          }}
+          disabled={signingIn}
           style={{
             padding: '12px 24px',
             fontSize: '16px',
@@ -89,14 +95,15 @@ export default function App() {
             background: 'white',
             border: 'none',
             borderRadius: '8px',
-            cursor: 'pointer',
+            cursor: signingIn ? 'wait' : 'pointer',
             boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-            transition: 'transform 0.2s'
+            transition: 'transform 0.2s',
+            opacity: signingIn ? 0.7 : 1
           }}
-          onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-          onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          onMouseOver={(e) => !signingIn && (e.currentTarget.style.transform = 'scale(1.05)')}
+          onMouseOut={(e) => !signingIn && (e.currentTarget.style.transform = 'scale(1)')}
         >
-          🔐 Sign in with Google
+          {signingIn ? '⏳ Opening...' : '🔐 Sign in with Google'}
         </button>
       </div>
     )
