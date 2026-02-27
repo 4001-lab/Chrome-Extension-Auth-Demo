@@ -13,6 +13,18 @@ export default function App() {
 
   useEffect(() => {
     init()
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+      if (session?.user) {
+        loadNotes()
+      } else {
+        setNotes([])
+      }
+    })
+
+    return () => subscription.unsubscribe()
   }, [])
 
   async function init() {
@@ -103,7 +115,11 @@ export default function App() {
       </div>
       
       <button
-        onClick={signOut}
+        onClick={async () => {
+          await signOut()
+          setUser(null)
+          setNotes([])
+        }}
         style={{
           padding: '6px 12px',
           fontSize: '12px',
