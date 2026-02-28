@@ -26,10 +26,15 @@ export async function signInWithGoogle() {
     if (!responseUrl) throw new Error('OAuth failed')
 
     const url = new URL(responseUrl)
-    const hash = new URLSearchParams(url.hash.substring(1))
 
-    const access_token = hash.get('access_token')
-    const refresh_token = hash.get('refresh_token')
+    // Try fragment first (e.g. #access_token=...), otherwise fall back to query params (?access_token=...)
+    const params =
+      url.hash && url.hash.length > 1
+        ? new URLSearchParams(url.hash.substring(1))
+        : url.searchParams
+
+    const access_token = params.get('access_token')
+    const refresh_token = params.get('refresh_token')
 
     if (!access_token || !refresh_token) {
       throw new Error('Missing tokens')
@@ -41,10 +46,9 @@ export async function signInWithGoogle() {
     })
 
     await browser.storage.local.set({ session: { access_token, refresh_token } })
-    window.location.reload()
   } catch (err) {
     console.error('Sign in error:', err)
-    // alert('Sign in failed. Check console for details.')
+    throw err
   }
 }
 

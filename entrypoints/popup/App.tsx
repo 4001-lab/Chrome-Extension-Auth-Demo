@@ -82,9 +82,15 @@ export default function App() {
         <h2 style={{ color: 'white', marginBottom: '30px' }}>Welcome</h2>
         <button
           onClick={async () => {
+
             setSigningIn(true)
-            await signInWithGoogle()
-            setSigningIn(false)
+
+            await browser.runtime.sendMessage({ type: 'LOGIN' })
+            const { data } = await supabase.auth.getUser()
+            setUser(data.user)
+
+            if (data.user) loadNotes()
+            //setSigningIn(false)
           }}
           disabled={signingIn}
           style={{
@@ -120,7 +126,7 @@ export default function App() {
       <div style={{ marginBottom: '15px', fontSize: '14px', color: '#666' }}>
         {user.email}
       </div>
-      
+
       <button
         onClick={async () => {
           await signOut()

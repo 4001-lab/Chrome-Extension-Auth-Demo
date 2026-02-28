@@ -5,7 +5,7 @@ export default defineConfig({
   modules: ['@wxt-dev/module-react'],
   manifest: {
     permissions: ['storage', 'identity'],
-    host_permissions: ['https://*.supabase.co/*']
+    host_permissions: ['https://*.supabase.co/*'],
   },
 });
 
