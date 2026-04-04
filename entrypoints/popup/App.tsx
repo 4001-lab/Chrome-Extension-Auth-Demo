@@ -73,8 +73,8 @@ export default function App() {
   if (loading) {
     return (
       <div style={{
-        width: '300px',
-        height: '400px',
+        width: '530px',
+        height: '440px',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -105,8 +105,8 @@ export default function App() {
   if (!user) {
     return (
       <div style={{
-        width: '100%',
-        minHeight: '100vh',
+        width: '530px',
+        height: '440px',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -190,13 +190,14 @@ export default function App() {
 
   return (
     <div style={{
-      width: '300px',
-      minHeight: '400px',
+      width: '530px',
+      height: '440px',
       padding: '20px',
       background: '#f5f5f5',
       fontFamily: 'system-ui, -apple-system, sans-serif',
       display: 'flex',
-      flexDirection: 'column'
+      flexDirection: 'column',
+      boxSizing: 'border-box'
     }}>
       <div style={{ 
         display: 'flex', 
