@@ -1,8 +1,8 @@
 {
-  "name": "chrome-extension-auth-demo",
-  "description": "manifest.json description",
+  "name": "NoteKo",
+  "description": "Save and Manage Notes in your Browser",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "wxt",
