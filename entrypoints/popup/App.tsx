@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { signOut } from '../../lib/auth'
+import { signInWithGoogle, signOut } from '../../lib/auth'
 import { restoreSession } from '../../lib/session'
 import { getNotes, addNote, deleteNote, updateNote } from '../../lib/notes'
 import { supabase } from '../../lib/supabaseClient'
@@ -146,7 +146,7 @@ export default function App() {
           <button
             onClick={async () => {
               setSigningIn(true)
-              await browser.runtime.sendMessage({ type: 'LOGIN' }); // Trigger login in background. Don't change this line of code
+              await browser.runtime.sendMessage({ type: 'LOGIN' });
               const { data } = await supabase.auth.getUser()
               setUser(data.user)
               if (data.user) loadNotes()
@@ -186,162 +186,214 @@ export default function App() {
     )
   }
 
+  const userName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'
+
   return (
     <div style={{
       width: '300px',
       minHeight: '400px',
       padding: '20px',
       background: '#f5f5f5',
-      fontFamily: 'system-ui, -apple-system, sans-serif'
+      fontFamily: 'system-ui, -apple-system, sans-serif',
+      display: 'flex',
+      flexDirection: 'column'
     }}>
-      <div style={{ marginBottom: '15px', fontSize: '14px', color: '#666' }}>
-        {user.email}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'flex-start',
+        marginBottom: '15px',
+        paddingBottom: '15px',
+        borderBottom: '3px solid #ddd'
+      }}>
+        <div>
+          <h2 style={{ margin: '0 0 5px 0', fontSize: '18px', color: '#333', fontWeight: '600' }}>
+            Hi, {userName}! 👋
+          </h2>
+          <p style={{ margin: 0, fontSize: '12px', color: '#999' }}>
+            {notes.length} {notes.length === 1 ? 'note' : 'notes'}
+          </p>
+        </div>
+        
+        <button
+          onClick={async () => {
+            await signOut()
+            setUser(null)
+            setNotes([])
+          }}
+          title="Sign out"
+          style={{
+            padding: '8px',
+            background: 'transparent',
+            color: '#666',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'all 0.2s'
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.background = '#ff4444'
+            e.currentTarget.style.color = 'white'
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.background = 'transparent'
+            e.currentTarget.style.color = '#666'
+          }}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <polyline points="16 17 21 12 16 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
       </div>
-
-      <button
-        onClick={async () => {
-          await signOut()
-          setUser(null)
-          setNotes([])
-        }}
-        style={{
-          padding: '6px 12px',
-          fontSize: '12px',
-          background: '#ff4444',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: 'pointer'
-        }}
-      >
-        Sign out
-      </button>
-
-      <hr style={{ margin: '15px 0', border: 'none', borderTop: '1px solid #ddd' }} />
 
       <div style={{ display: 'flex', gap: '8px', marginBottom: '15px' }}>
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
+          onKeyPress={(e) => e.key === 'Enter' && handleAdd()}
           placeholder="Add a note..."
           style={{
             flex: 1,
-            padding: '8px 12px',
+            padding: '10px 12px',
             border: '1px solid #ddd',
-            borderRadius: '4px',
-            fontSize: '14px'
+            borderRadius: '6px',
+            fontSize: '14px',
+            boxSizing: 'border-box'
           }}
         />
         <button
           onClick={handleAdd}
           style={{
-            padding: '8px 16px',
+            padding: '10px 16px',
             background: '#667eea',
             color: 'white',
             border: 'none',
-            borderRadius: '4px',
+            borderRadius: '6px',
             cursor: 'pointer',
-            fontSize: '14px'
+            fontSize: '14px',
+            fontWeight: '600'
           }}
         >
           Add
         </button>
       </div>
 
-      {notes.map((note) => (
-        <div
-          key={note.id}
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '10px',
-            marginBottom: '8px',
-            background: '#151313',
-            borderRadius: '4px',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-          }}
-        >
-          {editingId === note.id ? (
-            <>
-              <input
-                value={editText}
-                onChange={(e) => setEditText(e.target.value)}
-                style={{
-                  flex: 1,
-                  padding: '6px',
-                  border: '1px solid #ddd',
-                  borderRadius: '3px',
-                  fontSize: '14px',
-                  marginRight: '8px'
-                }}
-              />
-              <button
-                onClick={handleUpdate}
-                style={{
-                  padding: '4px 8px',
-                  background: '#667eea',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '3px',
-                  cursor: 'pointer',
-                  fontSize: '12px',
-                  marginRight: '4px'
-                }}
-              >
-                ✓
-              </button>
-              <button
-                onClick={() => setEditingId(null)}
-                style={{
-                  padding: '4px 8px',
-                  background: '#999',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '3px',
-                  cursor: 'pointer',
-                  fontSize: '12px'
-                }}
-              >
-                ✕
-              </button>
-            </>
-          ) : (
-            <>
-              <span style={{ fontSize: '14px', flex: 1, color: '#fff' }}>{note.content}</span>
-              <button
-                onClick={() => startEdit(note)}
-                style={{
-                  padding: '4px 8px',
-                  background: '#667eea',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '3px',
-                  cursor: 'pointer',
-                  fontSize: '12px',
-                  marginRight: '4px'
-                }}
-              >
-                ✎
-              </button>
-              <button
-                onClick={() => handleDelete(note.id)}
-                style={{
-                  padding: '4px 8px',
-                  background: '#ff4444',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '3px',
-                  cursor: 'pointer',
-                  fontSize: '12px'
-                }}
-              >
-                ×
-              </button>
-            </>
-          )}
-        </div>
-      ))}
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        {notes.length === 0 ? (
+          <div style={{
+            textAlign: 'center',
+            color: '#999',
+            fontSize: '14px',
+            padding: '20px 10px'
+          }}>
+            No notes yet. Create one to get started! ✨
+          </div>
+        ) : (
+          notes.map((note) => (
+            <div
+              key={note.id}
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '12px',
+                marginBottom: '8px',
+                background: '#151313',
+                borderRadius: '6px',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+              }}
+            >
+              {editingId === note.id ? (
+                <>
+                  <input
+                    value={editText}
+                    onChange={(e) => setEditText(e.target.value)}
+                    style={{
+                      flex: 1,
+                      padding: '6px',
+                      border: '1px solid #667eea',
+                      borderRadius: '3px',
+                      fontSize: '14px',
+                      marginRight: '8px',
+                      background: '#222',
+                      color: '#fff'
+                    }}
+                  />
+                  <button
+                    onClick={handleUpdate}
+                    style={{
+                      padding: '4px 8px',
+                      background: '#667eea',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '3px',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      marginRight: '4px'
+                    }}
+                  >
+                    ✓
+                  </button>
+                  <button
+                    onClick={() => setEditingId(null)}
+                    style={{
+                      padding: '4px 8px',
+                      background: '#999',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '3px',
+                      cursor: 'pointer',
+                      fontSize: '12px'
+                    }}
+                  >
+                    ✕
+                  </button>
+                </>
+              ) : (
+                <>
+                  <span style={{ fontSize: '14px', flex: 1, color: '#fff', wordBreak: 'break-word' }}>{note.content}</span>
+                  <button
+                    onClick={() => startEdit(note)}
+                    style={{
+                      padding: '4px 8px',
+                      background: '#667eea',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '3px',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      marginRight: '4px',
+                      flexShrink: 0
+                    }}
+                  >
+                    ✎
+                  </button>
+                  <button
+                    onClick={() => handleDelete(note.id)}
+                    style={{
+                      padding: '4px 8px',
+                      background: '#ff4444',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '3px',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      flexShrink: 0
+                    }}
+                  >
+                    ×
+                  </button>
+                </>
+              )}
+            </div>
+          ))
+        )}
+      </div>
     </div>
   )
 }
