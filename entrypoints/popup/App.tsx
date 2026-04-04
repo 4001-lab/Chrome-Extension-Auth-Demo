@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { signInWithGoogle, signOut } from '../../lib/auth'
+import { signOut } from '../../lib/auth'
 import { restoreSession } from '../../lib/session'
 import { getNotes, addNote, deleteNote, updateNote } from '../../lib/notes'
 import { supabase } from '../../lib/supabaseClient'
@@ -11,6 +11,7 @@ export default function App() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editText, setEditText] = useState('')
   const [signingIn, setSigningIn] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     init()
@@ -29,12 +30,14 @@ export default function App() {
   }, [])
 
   async function init() {
-    await restoreSession()
-
-    const { data } = await supabase.auth.getUser()
-    setUser(data.user)
-
-    if (data.user) loadNotes()
+    try {
+      await restoreSession()
+      const { data } = await supabase.auth.getUser()
+      setUser(data.user)
+      if (data.user) loadNotes()
+    } finally {
+      setLoading(false)
+    }
   }
 
   async function loadNotes() {
@@ -65,6 +68,38 @@ export default function App() {
       setEditText('')
       loadNotes()
     }
+  }
+
+  if (loading) {
+    return (
+      <div style={{
+        width: '300px',
+        height: '400px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#f5f5f5',
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+        gap: '16px'
+      }}>
+        <style>{`
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+          .loader {
+            width: 30px;
+            height: 30px;
+            border: 3px solid #e0e0e0;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+          }
+        `}</style>
+        <div className="loader"></div>
+        <p style={{ color: '#666', fontSize: '14px', margin: 0 }}>We are almost there!</p>
+      </div>
+    )
   }
 
   if (!user) {
@@ -111,7 +146,7 @@ export default function App() {
           <button
             onClick={async () => {
               setSigningIn(true)
-              await browser.runtime.sendMessage({ type: 'LOGIN' })
+              await browser.runtime.sendMessage({ type: 'LOGIN' }); // Trigger login in background. Don't change this line of code
               const { data } = await supabase.auth.getUser()
               setUser(data.user)
               if (data.user) loadNotes()
@@ -222,7 +257,7 @@ export default function App() {
             alignItems: 'center',
             padding: '10px',
             marginBottom: '8px',
-            background: 'white',
+            background: '#151313',
             borderRadius: '4px',
             boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
           }}
@@ -273,7 +308,7 @@ export default function App() {
             </>
           ) : (
             <>
-              <span style={{ fontSize: '14px', flex: 1 }}>{note.content}</span>
+              <span style={{ fontSize: '14px', flex: 1, color: '#fff' }}>{note.content}</span>
               <button
                 onClick={() => startEdit(note)}
                 style={{
