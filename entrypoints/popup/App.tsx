@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { signInWithGoogle, signOut } from '../../lib/auth'
 import { restoreSession } from '../../lib/session'
 import { getNotes, addNote, deleteNote, updateNote } from '../../lib/notes'
@@ -12,6 +12,7 @@ export default function App() {
   const [editText, setEditText] = useState('')
   const [signingIn, setSigningIn] = useState(false)
   const [loading, setLoading] = useState(true)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     init()
@@ -28,6 +29,13 @@ export default function App() {
 
     return () => subscription.unsubscribe()
   }, [])
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px'
+    }
+  }, [text])
 
   async function init() {
     try {
@@ -46,6 +54,7 @@ export default function App() {
   }
 
   async function handleAdd() {
+    if (!text.trim()) return
     await addNote(user.id, text)
     setText('')
     loadNotes()
@@ -70,11 +79,19 @@ export default function App() {
     }
   }
 
+  const calculateHeight = () => {
+    const baseHeight = 200
+    const noteHeight = 60
+    const maxHeight = 600
+    const calculatedHeight = baseHeight + (notes.length * noteHeight)
+    return Math.min(calculatedHeight, maxHeight)
+  }
+
   if (loading) {
     return (
       <div style={{
         width: '530px',
-        height: '440px',
+        height: '426px',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -106,7 +123,7 @@ export default function App() {
     return (
       <div style={{
         width: '530px',
-        height: '440px',
+        height: '426px',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -191,7 +208,9 @@ export default function App() {
   return (
     <div style={{
       width: '530px',
-      height: '440px',
+      minHeight: '300px',
+      maxHeight: '600px',
+      height: notes.length === 0 ? '426px' : 'auto',
       padding: '20px',
       background: '#f5f5f5',
       fontFamily: 'system-ui, -apple-system, sans-serif',
@@ -205,7 +224,7 @@ export default function App() {
         alignItems: 'flex-start',
         marginBottom: '15px',
         paddingBottom: '15px',
-        borderBottom: '3px solid #ddd'
+        borderBottom: '1px solid #ddd'
       }}>
         <div>
           <h2 style={{ margin: '0 0 5px 0', fontSize: '18px', color: '#333', fontWeight: '600' }}>
@@ -252,19 +271,35 @@ export default function App() {
         </button>
       </div>
 
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '15px' }}>
-        <input
+      <div style={{ 
+        display: 'flex', 
+        gap: '8px', 
+        marginBottom: '15px',
+        alignItems: 'flex-end'
+      }}>
+        <textarea
+          ref={textareaRef}
           value={text}
           onChange={(e) => setText(e.target.value)}
-          onKeyPress={(e) => e.key === 'Enter' && handleAdd()}
-          placeholder="Add a note..."
+          onKeyPress={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault()
+              handleAdd()
+            }
+          }}
+          placeholder="Write your note here..."
           style={{
             flex: 1,
             padding: '10px 12px',
             border: '1px solid #ddd',
             borderRadius: '6px',
             fontSize: '14px',
-            boxSizing: 'border-box'
+            boxSizing: 'border-box',
+            resize: 'none',
+            minHeight: '42px',
+            maxHeight: '120px',
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            lineHeight: '1.5'
           }}
         />
         <button
@@ -277,14 +312,19 @@ export default function App() {
             borderRadius: '6px',
             cursor: 'pointer',
             fontSize: '14px',
-            fontWeight: '600'
+            fontWeight: '600',
+            height: '42px'
           }}
         >
           Add
         </button>
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto' }}>
+      <div style={{ 
+        flex: 1, 
+        overflowY: notes.length > 5 ? 'auto' : 'visible',
+        maxHeight: '400px'
+      }}>
         {notes.length === 0 ? (
           <div style={{
             textAlign: 'center',
@@ -295,13 +335,13 @@ export default function App() {
             No notes yet. Create one to get started! ✨
           </div>
         ) : (
-          notes.map((note) => (
+          [...notes].reverse().map((note) => (
             <div
               key={note.id}
               style={{
                 display: 'flex',
                 justifyContent: 'space-between',
-                alignItems: 'center',
+                alignItems: 'flex-start',
                 padding: '12px',
                 marginBottom: '8px',
                 background: '#151313',
@@ -311,7 +351,7 @@ export default function App() {
             >
               {editingId === note.id ? (
                 <>
-                  <input
+                  <textarea
                     value={editText}
                     onChange={(e) => setEditText(e.target.value)}
                     style={{
@@ -322,73 +362,86 @@ export default function App() {
                       fontSize: '14px',
                       marginRight: '8px',
                       background: '#222',
-                      color: '#fff'
+                      color: '#fff',
+                      resize: 'vertical',
+                      minHeight: '40px',
+                      fontFamily: 'system-ui, -apple-system, sans-serif',
+                      lineHeight: '1.5'
                     }}
                   />
-                  <button
-                    onClick={handleUpdate}
-                    style={{
-                      padding: '4px 8px',
-                      background: '#667eea',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '3px',
-                      cursor: 'pointer',
-                      fontSize: '12px',
-                      marginRight: '4px'
-                    }}
-                  >
-                    ✓
-                  </button>
-                  <button
-                    onClick={() => setEditingId(null)}
-                    style={{
-                      padding: '4px 8px',
-                      background: '#999',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '3px',
-                      cursor: 'pointer',
-                      fontSize: '12px'
-                    }}
-                  >
-                    ✕
-                  </button>
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    <button
+                      onClick={handleUpdate}
+                      style={{
+                        padding: '4px 8px',
+                        background: '#667eea',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '3px',
+                        cursor: 'pointer',
+                        fontSize: '12px'
+                      }}
+                    >
+                      ✓
+                    </button>
+                    <button
+                      onClick={() => setEditingId(null)}
+                      style={{
+                        padding: '4px 8px',
+                        background: '#999',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '3px',
+                        cursor: 'pointer',
+                        fontSize: '12px'
+                      }}
+                    >
+                      ✕
+                    </button>
+                  </div>
                 </>
               ) : (
                 <>
-                  <span style={{ fontSize: '14px', flex: 1, color: '#fff', wordBreak: 'break-word' }}>{note.content}</span>
-                  <button
-                    onClick={() => startEdit(note)}
-                    style={{
-                      padding: '4px 8px',
-                      background: '#667eea',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '3px',
-                      cursor: 'pointer',
-                      fontSize: '12px',
-                      marginRight: '4px',
-                      flexShrink: 0
-                    }}
-                  >
-                    ✎
-                  </button>
-                  <button
-                    onClick={() => handleDelete(note.id)}
-                    style={{
-                      padding: '4px 8px',
-                      background: '#ff4444',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '3px',
-                      cursor: 'pointer',
-                      fontSize: '12px',
-                      flexShrink: 0
-                    }}
-                  >
-                    ×
-                  </button>
+                  <span style={{ 
+                    fontSize: '14px', 
+                    flex: 1, 
+                    color: '#fff', 
+                    wordBreak: 'break-word',
+                    whiteSpace: 'pre-wrap',
+                    lineHeight: '1.5'
+                  }}>{note.content}</span>
+                  <div style={{ display: 'flex', gap: '4px', marginLeft: '8px' }}>
+                    <button
+                      onClick={() => startEdit(note)}
+                      style={{
+                        padding: '4px 8px',
+                        background: '#667eea',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '3px',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        flexShrink: 0
+                      }}
+                    >
+                      ✎
+                    </button>
+                    <button
+                      onClick={() => handleDelete(note.id)}
+                      style={{
+                        padding: '4px 8px',
+                        background: '#ff4444',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '3px',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        flexShrink: 0
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
                 </>
               )}
             </div>
