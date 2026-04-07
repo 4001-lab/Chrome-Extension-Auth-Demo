@@ -9,6 +9,8 @@ lerna-debug.log*
 
 node_modules
 .output
+*.pem
+get-extension-id.js
 .env
 .env.local
 .env.development.local
