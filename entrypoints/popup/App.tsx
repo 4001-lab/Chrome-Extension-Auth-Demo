@@ -273,7 +273,7 @@ export default function App() {
 
       <div style={{ 
         display: 'flex', 
-        gap: '8px', 
+        gap: '10px', 
         marginBottom: '15px',
         alignItems: 'flex-end'
       }}>
@@ -290,33 +290,60 @@ export default function App() {
           placeholder="Write your note here..."
           style={{
             flex: 1,
-            padding: '10px 12px',
-            border: '1px solid #ddd',
-            borderRadius: '6px',
+            padding: '12px 14px',
+            border: '2px solid #e0e0e0',
+            borderRadius: '10px',
             fontSize: '14px',
             boxSizing: 'border-box',
             resize: 'none',
-            minHeight: '42px',
+            minHeight: '48px',
             maxHeight: '120px',
             fontFamily: 'system-ui, -apple-system, sans-serif',
-            lineHeight: '1.5'
+            lineHeight: '1.5',
+            outline: 'none',
+            transition: 'border-color 0.2s, box-shadow 0.2s',
+            background: 'white'
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = '#667eea'
+            e.currentTarget.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)'
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = '#e0e0e0'
+            e.currentTarget.style.boxShadow = 'none'
           }}
         />
         <button
           onClick={handleAdd}
+          disabled={!text.trim()}
           style={{
-            padding: '10px 16px',
-            background: '#667eea',
+            padding: '12px 20px',
+            background: text.trim() ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#e0e0e0',
             color: 'white',
             border: 'none',
-            borderRadius: '6px',
-            cursor: 'pointer',
+            borderRadius: '10px',
+            cursor: text.trim() ? 'pointer' : 'not-allowed',
             fontSize: '14px',
             fontWeight: '600',
-            height: '42px'
+            height: '48px',
+            minWidth: '80px',
+            transition: 'all 0.2s',
+            boxShadow: text.trim() ? '0 4px 12px rgba(102, 126, 234, 0.3)' : 'none'
+          }}
+          onMouseOver={(e) => {
+            if (text.trim()) {
+              e.currentTarget.style.transform = 'translateY(-2px)'
+              e.currentTarget.style.boxShadow = '0 6px 16px rgba(102, 126, 234, 0.4)'
+            }
+          }}
+          onMouseOut={(e) => {
+            if (text.trim()) {
+              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.3)'
+            }
           }}
         >
-          Add
+          Add Note
         </button>
       </div>
 
