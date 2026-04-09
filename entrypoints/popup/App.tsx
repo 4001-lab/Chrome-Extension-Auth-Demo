@@ -317,7 +317,7 @@ export default function App() {
           onClick={handleAdd}
           disabled={!text.trim()}
           style={{
-            padding: '12px 20px',
+            padding: '12px 0px',
             background: text.trim() ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#e0e0e0',
             color: 'white',
             border: 'none',
