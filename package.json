@@ -2,7 +2,7 @@
   "name": "noteko",
   "description": "Save and Manage Notes in your Browser",
   "private": true,
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "module",
   "scripts": {
     "dev": "wxt",

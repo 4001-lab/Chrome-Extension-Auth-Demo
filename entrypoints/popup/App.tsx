@@ -429,14 +429,24 @@ export default function App() {
                 </>
               ) : (
                 <>
-                  <span style={{ 
-                    fontSize: '14px', 
-                    flex: 1, 
-                    color: '#fff', 
-                    wordBreak: 'break-word',
-                    whiteSpace: 'pre-wrap',
-                    lineHeight: '1.5'
-                  }}>{note.content}</span>
+                  <div style={{ flex: 1 }}>
+                    <span style={{ 
+                      fontSize: '14px', 
+                      color: '#fff', 
+                      wordBreak: 'break-word',
+                      whiteSpace: 'pre-wrap',
+                      lineHeight: '1.5',
+                      display: 'block'
+                    }}>{note.content}</span>
+                    <span style={{ 
+                      fontSize: '11px', 
+                      color: '#888', 
+                      marginTop: '6px',
+                      display: 'block'
+                    }}>
+                      {note.updated_at ? `Updated ${new Date(note.updated_at + 'Z').toLocaleString()}` : `Created ${new Date(note.created_at + 'Z').toLocaleString()}`}
+                    </span>
+                  </div>
                   <div style={{ display: 'flex', gap: '4px', marginLeft: '8px' }}>
                     <button
                       onClick={() => startEdit(note)}

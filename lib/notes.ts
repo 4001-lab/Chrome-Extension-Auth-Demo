@@ -20,6 +20,6 @@ export async function deleteNote(id: string) {
 }
 
 export async function updateNote(id: string, content: string) {
-  const { error } = await supabase.from('notes').update({ content }).eq('id', id)
+  const { error } = await supabase.from('notes').update({ content, updated_at: new Date().toISOString() }).eq('id', id)
   if (error) throw error
 }
